@@ -71,12 +71,20 @@ export default function Interns() {
               className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-5"
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden">
-                  <User size={22} className="text-zinc-500" />
+                <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                  {r.photo_url ? (
+                    <img
+                      src={r.photo_url}
+                      alt={r.full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User size={22} className="text-zinc-500" />
+                  )}
                 </div>
-                <div>
-                  <div className="font-medium">{r.full_name}</div>
-                  <div className="text-xs font-mono text-zinc-500">{r.Matriculation_Number}</div>
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{r.full_name}</div>
+                  <div className="text-xs font-mono text-zinc-500 truncate">{r.Matriculation_Number}</div>
                 </div>
               </div>
 

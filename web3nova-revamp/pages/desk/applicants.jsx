@@ -78,6 +78,7 @@ export default function Applicants() {
         <table className="w-full text-sm">
           <thead className="bg-zinc-900 text-zinc-400">
             <tr>
+              <th className="text-left px-4 py-3 w-12"></th>
               <th className="text-left px-4 py-3">Matric</th>
               <th className="text-left px-4 py-3">Name</th>
               <th className="text-left px-4 py-3">Email</th>
@@ -89,7 +90,7 @@ export default function Applicants() {
           <tbody>
             {rows.length === 0 && !loading && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-zinc-500">
+                <td colSpan={7} className="px-4 py-10 text-center text-zinc-500">
                   No applicants for {year}.
                 </td>
               </tr>
@@ -101,6 +102,15 @@ export default function Applicants() {
                 animate={{ opacity: 1 }}
                 className="border-t border-zinc-900 hover:bg-zinc-900/40"
               >
+                <td className="px-4 py-2">
+                  <div className="w-9 h-9 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center">
+                    {r.photo_url ? (
+                      <img src={r.photo_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[10px] text-zinc-500">N/A</span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-3 font-mono text-xs">{r.Matriculation_Number}</td>
                 <td className="px-4 py-3">{r.full_name}</td>
                 <td className="px-4 py-3 text-zinc-400">{r.email}</td>
