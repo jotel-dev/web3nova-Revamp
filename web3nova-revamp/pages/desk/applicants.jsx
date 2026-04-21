@@ -142,7 +142,7 @@ export default function Applicants() {
                     </button>
                     <button
                       onClick={() => decide(r.Matriculation_Number, false)}
-                      disabled={busyId === r.Matriculation_Number || r.is_active === 0}
+                      disabled={busyId === r.Matriculation_Number || r.is_active === 1}
                       className="inline-flex items-center gap-1 bg-red-900/40 hover:bg-red-900/70 border border-red-900 text-red-300 px-3 py-1 rounded text-xs disabled:opacity-40"
                     >
                       <X size={12} />

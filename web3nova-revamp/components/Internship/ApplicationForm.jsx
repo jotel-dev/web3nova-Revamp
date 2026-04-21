@@ -76,25 +76,33 @@ const ApplicationForm = () => {
         body: formData,
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
         router.push('/internship/success');
-      } else {
-        let errorMessage = data.error || "Failed to submit application.";
-        if (errorMessage.toLowerCase().includes("unique constraint failed") || errorMessage.toLowerCase().includes("duplicate")) {
-          if (errorMessage.includes("email")) {
-            errorMessage = "An application with this Email Address is already registered.";
-          } else if (errorMessage.includes("Matriculation_Number") || errorMessage.includes("matric")) {
-            errorMessage = "An application with this Matriculation Number is already registered.";
-          } else {
-            errorMessage = "You have already registered with these details.";
-          }
-        }
-        setStatus({ type: "error", message: errorMessage });
+        return;
       }
+
+      if (response.status === 409) {
+        const msg = data.error || "";
+        let friendly = "You have already registered with these details.";
+        if (msg.includes("email")) {
+          friendly = "An application with this Email Address is already registered.";
+        } else if (msg.toLowerCase().includes("matric")) {
+          friendly = "An application with this Matriculation Number is already registered.";
+        }
+        setStatus({ type: "error", message: friendly });
+        return;
+      }
+
+      if (response.status === 429) {
+        setStatus({ type: "error", message: "Too many submissions. Please wait a minute and try again." });
+        return;
+      }
+
+      setStatus({ type: "error", message: data.error || "Failed to submit application. Please try again." });
     } catch (error) {
-      setStatus({ type: "error", message: "An error occurred. Please try again later." });
+      setStatus({ type: "error", message: "Network error — check your connection and try again." });
     } finally {
       setLoading(false);
     }
