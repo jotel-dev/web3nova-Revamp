@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, X, Loader2, RefreshCw, AlertCircle } from "lucide-react";
+import { Check, X, Loader2, RefreshCw, AlertCircle, Eye } from "lucide-react";
 import DeskLayout from "@/components/Desk/DeskLayout";
+import ApplicantModal from "@/components/Desk/ApplicantModal";
 import { deskFetch } from "@/lib/deskApi";
 
 export default function Applicants() {
@@ -11,6 +12,7 @@ export default function Applicants() {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState("");
+  const [viewMatric, setViewMatric] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -38,7 +40,9 @@ export default function Applicants() {
       });
       setRows((rs) =>
         rs.map((r) =>
-          r.Matriculation_Number === matric ? { ...r, is_active: admit ? 1 : 0 } : r
+          r.Matriculation_Number === matric
+            ? { ...r, is_active: admit ? 1 : 0, status: admit ? "admitted" : "rejected" }
+            : r
         )
       );
     } catch (err) {
@@ -116,9 +120,13 @@ export default function Applicants() {
                 <td className="px-4 py-3 text-zinc-400">{r.email}</td>
                 <td className="px-4 py-3 text-zinc-400">{r.Department || "—"}</td>
                 <td className="px-4 py-3">
-                  {r.is_active === 1 ? (
+                  {r.status === "admitted" ? (
                     <span className="text-green-400 text-xs bg-green-950/40 px-2 py-1 rounded">
                       admitted
+                    </span>
+                  ) : r.status === "rejected" ? (
+                    <span className="text-red-400 text-xs bg-red-950/40 px-2 py-1 rounded">
+                      rejected
                     </span>
                   ) : (
                     <span className="text-amber-400 text-xs bg-amber-950/40 px-2 py-1 rounded">
@@ -129,8 +137,16 @@ export default function Applicants() {
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex gap-2">
                     <button
+                      onClick={() => setViewMatric(r.Matriculation_Number)}
+                      className="inline-flex items-center gap-1 bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 px-3 py-1 rounded text-xs"
+                      title="View details"
+                    >
+                      <Eye size={12} />
+                      View
+                    </button>
+                    <button
                       onClick={() => decide(r.Matriculation_Number, true)}
-                      disabled={busyId === r.Matriculation_Number || r.is_active === 1}
+                      disabled={busyId === r.Matriculation_Number || r.status !== "pending"}
                       className="inline-flex items-center gap-1 bg-green-900/40 hover:bg-green-900/70 border border-green-900 text-green-300 px-3 py-1 rounded text-xs disabled:opacity-40"
                     >
                       {busyId === r.Matriculation_Number ? (
@@ -142,7 +158,7 @@ export default function Applicants() {
                     </button>
                     <button
                       onClick={() => decide(r.Matriculation_Number, false)}
-                      disabled={busyId === r.Matriculation_Number || r.is_active === 1}
+                      disabled={busyId === r.Matriculation_Number || r.status !== "pending"}
                       className="inline-flex items-center gap-1 bg-red-900/40 hover:bg-red-900/70 border border-red-900 text-red-300 px-3 py-1 rounded text-xs disabled:opacity-40"
                     >
                       <X size={12} />
@@ -155,6 +171,8 @@ export default function Applicants() {
           </tbody>
         </table>
       </div>
+
+      <ApplicantModal matric={viewMatric} onClose={() => setViewMatric(null)} />
     </DeskLayout>
   );
 }
