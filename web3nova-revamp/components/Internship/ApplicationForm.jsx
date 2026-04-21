@@ -54,8 +54,8 @@ const ApplicationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formState.full_name || !formState.email || !formState.Matriculation_Number) {
-      setStatus({ type: "error", message: "Please fill in all required fields." });
+    if (!formState.full_name || !formState.email || !formState.Matriculation_Number || !formState.Department || !formState.phone_number || !formState.Parent_contact || !formState.ADDRESS || !formState.skills || !formState.bio || !formState.expectations || !photo) {
+      setStatus({ type: "error", message: "Please fill in all required fields and upload a photo." });
       return;
     }
 
@@ -79,23 +79,19 @@ const ApplicationForm = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setStatus({ type: "success", message: "Application submitted successfully! You will be notified if admitted." });
-        setFormState({
-          Matriculation_Number: "",
-          full_name: "",
-          email: "",
-          Department: "",
-          bio: "",
-          skills: "",
-          expectations: "",
-          ADDRESS: "",
-          phone_number: "",
-          Parent_contact: "",
-        });
-        setPhoto(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        router.push('/internship/success');
       } else {
-        setStatus({ type: "error", message: data.error || "Failed to submit application." });
+        let errorMessage = data.error || "Failed to submit application.";
+        if (errorMessage.toLowerCase().includes("unique constraint failed") || errorMessage.toLowerCase().includes("duplicate")) {
+          if (errorMessage.includes("email")) {
+            errorMessage = "An application with this Email Address is already registered.";
+          } else if (errorMessage.includes("Matriculation_Number") || errorMessage.includes("matric")) {
+            errorMessage = "An application with this Matriculation Number is already registered.";
+          } else {
+            errorMessage = "You have already registered with these details.";
+          }
+        }
+        setStatus({ type: "error", message: errorMessage });
       }
     } catch (error) {
       setStatus({ type: "error", message: "An error occurred. Please try again later." });
@@ -228,9 +224,10 @@ const ApplicationForm = () => {
                 <div>
                   <label className="flex items-center gap-2 text-gray-400 text-sm uppercase tracking-widest mb-3">
                     <Book className="w-4 h-4" />
-                    Department
+                    Department *
                   </label>
                   <input
+                    required
                     name="Department"
                     value={formState.Department}
                     onChange={handleChange}
@@ -244,9 +241,10 @@ const ApplicationForm = () => {
                 <div>
                   <label className="flex items-center gap-2 text-gray-400 text-sm uppercase tracking-widest mb-3">
                     <Phone className="w-4 h-4" />
-                    Phone Number
+                    Phone Number *
                   </label>
                   <input
+                    required
                     name="phone_number"
                     value={formState.phone_number}
                     onChange={handleChange}
@@ -257,9 +255,10 @@ const ApplicationForm = () => {
                 <div>
                   <label className="flex items-center gap-2 text-gray-400 text-sm uppercase tracking-widest mb-3">
                     <Users className="w-4 h-4" />
-                    Parent/Guardian Contact
+                    Parent/Guardian Contact *
                   </label>
                   <input
+                    required
                     name="Parent_contact"
                     value={formState.Parent_contact}
                     onChange={handleChange}
@@ -272,9 +271,10 @@ const ApplicationForm = () => {
               <div>
                 <label className="flex items-center gap-2 text-gray-400 text-sm uppercase tracking-widest mb-3">
                   <MapPin className="w-4 h-4" />
-                  Residential Address
+                  Residential Address *
                 </label>
                 <input
+                  required
                   name="ADDRESS"
                   value={formState.ADDRESS}
                   onChange={handleChange}
@@ -286,9 +286,10 @@ const ApplicationForm = () => {
               <div>
                 <label className="flex items-center gap-2 text-gray-400 text-sm uppercase tracking-widest mb-3">
                   <Briefcase className="w-4 h-4" />
-                  Skills
+                  Skills *
                 </label>
                 <input
+                  required
                   name="skills"
                   value={formState.skills}
                   onChange={handleChange}
@@ -300,9 +301,10 @@ const ApplicationForm = () => {
               <div>
                 <label className="flex items-center gap-2 text-gray-400 text-sm uppercase tracking-widest mb-3">
                   <User className="w-4 h-4" />
-                  Bio
+                  Bio *
                 </label>
                 <textarea
+                  required
                   name="bio"
                   value={formState.bio}
                   onChange={handleChange}
@@ -315,9 +317,10 @@ const ApplicationForm = () => {
               <div>
                 <label className="flex items-center gap-2 text-gray-400 text-sm uppercase tracking-widest mb-3">
                   <Sparkles className="w-4 h-4" />
-                  Expectations
+                  Expectations *
                 </label>
                 <textarea
+                  required
                   name="expectations"
                   value={formState.expectations}
                   onChange={handleChange}
@@ -330,9 +333,10 @@ const ApplicationForm = () => {
               <div>
                 <label className="flex items-center gap-2 text-gray-400 text-sm uppercase tracking-widest mb-3">
                   <ImageIcon className="w-4 h-4" />
-                  Photo (Max 5MB)
+                  Photo (Max 5MB) *
                 </label>
                 <input
+                  required
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
