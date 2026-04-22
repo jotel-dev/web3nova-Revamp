@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Hash, Book, Briefcase, MapPin, Phone, Users, Image as ImageIcon, Loader2, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
+import { User, Mail, Hash, Book, Briefcase, MapPin, Phone, Users, Image as ImageIcon, Loader2, Sparkles, CheckCircle2, AlertCircle, Fingerprint, ShieldCheck } from "lucide-react";
+import { startRegistration, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import BackgroundEffects from "../Services/BackgroundEffects";
 import { useRouter } from "next/router";
+
+const API_BASE = "https://intership-server.onrender.com";
 
 const ApplicationForm = () => {
   const router = useRouter();
@@ -22,6 +25,8 @@ const ApplicationForm = () => {
   const [photo, setPhoto] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
+  const [step, setStep] = useState(1); // 1 = form, 2 = passkey
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -71,7 +76,7 @@ const ApplicationForm = () => {
         formData.append("photo", photo);
       }
 
-      const response = await fetch("https://intership-server.onrender.com/form", {
+      const response = await fetch(`${API_BASE}/form`, {
         method: "POST",
         body: formData,
       });
@@ -79,7 +84,8 @@ const ApplicationForm = () => {
       const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        router.push('/internship/success');
+        setStatus({ type: "", message: "" });
+        setStep(2);
         return;
       }
 
@@ -105,6 +111,63 @@ const ApplicationForm = () => {
       setStatus({ type: "error", message: "Network error — check your connection and try again." });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreatePasskey = async () => {
+    setStatus({ type: "", message: "" });
+
+    if (!browserSupportsWebAuthn()) {
+      setStatus({
+        type: "error",
+        message: "This device or browser doesn't support passkeys. Please use a phone or laptop with biometric unlock.",
+      });
+      return;
+    }
+
+    setPasskeyLoading(true);
+    try {
+      const optsRes = await fetch(`${API_BASE}/passkey/register/options`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Matriculation_Number: formState.Matriculation_Number }),
+      });
+      const opts = await optsRes.json().catch(() => ({}));
+      if (!optsRes.ok) {
+        setStatus({ type: "error", message: opts.error || "Couldn't start passkey setup." });
+        return;
+      }
+
+      let attResp;
+      try {
+        attResp = await startRegistration({ optionsJSON: opts });
+      } catch (err) {
+        const msg = err?.name === "NotAllowedError"
+          ? "Passkey setup was cancelled or timed out. Try again."
+          : err?.message || "Passkey setup failed.";
+        setStatus({ type: "error", message: msg });
+        return;
+      }
+
+      const verRes = await fetch(`${API_BASE}/passkey/register/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Matriculation_Number: formState.Matriculation_Number,
+          response: attResp,
+        }),
+      });
+      const verData = await verRes.json().catch(() => ({}));
+      if (!verRes.ok || !verData.verified) {
+        setStatus({ type: "error", message: verData.error || "Passkey verification failed." });
+        return;
+      }
+
+      router.push("/internship/success");
+    } catch (err) {
+      setStatus({ type: "error", message: "Network error during passkey setup. Try again." });
+    } finally {
+      setPasskeyLoading(false);
     }
   };
 
@@ -142,15 +205,17 @@ const ApplicationForm = () => {
 
           <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tighter">
             <span className="bg-gradient-to-b from-blue-400 via-blue-600 to-blue-800 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(37,99,235,0.3)]">
-              Internship
+              {step === 1 ? "Internship" : "Secure"}
             </span>{" "}
             <span className="bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
-              Application
+              {step === 1 ? "Application" : "Your Spot"}
             </span>
           </h1>
 
           <p className="text-gray-400 text-lg">
-            Apply to join our next cohort of interns.
+            {step === 1
+              ? "Apply to join our next cohort of interns."
+              : "One last step — bind this device so only you can check in."}
           </p>
         </motion.div>
 
@@ -181,6 +246,45 @@ const ApplicationForm = () => {
               )}
             </AnimatePresence>
 
+            {step === 2 ? (
+              <div className="space-y-6">
+                <div className="flex flex-col items-center text-center py-4">
+                  <div className="w-20 h-20 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
+                    <Fingerprint className="w-10 h-10 text-blue-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-3">Application received</h2>
+                  <p className="text-gray-400 max-w-md mb-8">
+                    Now create a passkey on this device. You'll use it (fingerprint,
+                    Face ID, or device unlock) to check in and out at the hub.
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/30 p-5 space-y-3 text-sm text-gray-300">
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                    <p>Your passkey stays on this device. We never see your fingerprint or face data.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                    <p>Lost your device later? An admin can reset it and you can register a new one.</p>
+                  </div>
+                </div>
+
+                <motion.button
+                  type="button"
+                  onClick={handleCreatePasskey}
+                  disabled={passkeyLoading}
+                  whileHover={{ scale: passkeyLoading ? 1 : 1.02 }}
+                  whileTap={{ scale: passkeyLoading ? 1 : 0.98 }}
+                  className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {passkeyLoading ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" /> Waiting for device...</>
+                  ) : (
+                    <><Fingerprint className="w-5 h-5" /> Create Passkey</>
+                  )}
+                </motion.button>
+              </div>
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
@@ -369,6 +473,7 @@ const ApplicationForm = () => {
                 )}
               </motion.button>
             </form>
+            )}
           </div>
         </motion.div>
       </div>

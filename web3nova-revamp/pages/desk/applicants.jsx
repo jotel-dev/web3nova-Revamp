@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, X, Loader2, RefreshCw, AlertCircle, Eye } from "lucide-react";
+import { Check, X, Loader2, RefreshCw, AlertCircle, Eye, Trash2 } from "lucide-react";
 import DeskLayout from "@/components/Desk/DeskLayout";
 import ApplicantModal from "@/components/Desk/ApplicantModal";
 import { deskFetch } from "@/lib/deskApi";
@@ -13,6 +13,7 @@ export default function Applicants() {
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState("");
   const [viewMatric, setViewMatric] = useState(null);
+  const [toDelete, setToDelete] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,6 +46,24 @@ export default function Applicants() {
             : r
         )
       );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function confirmDelete() {
+    const r = toDelete;
+    if (!r) return;
+    setBusyId(r.Matriculation_Number || `id-${r.id}`);
+    try {
+      const qs = r.Matriculation_Number
+        ? `matric=${encodeURIComponent(r.Matriculation_Number)}`
+        : `id=${r.id}`;
+      await deskFetch(`/applicant?${qs}`, { method: "DELETE" });
+      setRows((rs) => rs.filter((x) => x.id !== r.id));
+      setToDelete(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -164,6 +183,19 @@ export default function Applicants() {
                       <X size={12} />
                       Reject
                     </button>
+                    <button
+                      onClick={() => setToDelete(r)}
+                      disabled={busyId === (r.Matriculation_Number || `id-${r.id}`)}
+                      className="inline-flex items-center gap-1 bg-zinc-900/60 hover:bg-red-900/50 border border-zinc-800 hover:border-red-900 text-zinc-400 hover:text-red-300 px-3 py-1 rounded text-xs disabled:opacity-40"
+                      title="Delete permanently"
+                    >
+                      {busyId === (r.Matriculation_Number || `id-${r.id}`) ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={12} />
+                      )}
+                      Delete
+                    </button>
                   </div>
                 </td>
               </motion.tr>
@@ -173,6 +205,45 @@ export default function Applicants() {
       </div>
 
       <ApplicantModal matric={viewMatric} onClose={() => setViewMatric(null)} />
+
+      {toDelete && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-950/50 border border-red-900 flex items-center justify-center shrink-0">
+                <Trash2 size={18} className="text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold text-lg">Delete applicant?</h3>
+                <p className="text-zinc-400 text-sm mt-1">
+                  This permanently removes{" "}
+                  <span className="text-white font-medium">
+                    {toDelete.full_name || toDelete.Matriculation_Number || `id ${toDelete.id}`}
+                  </span>
+                  {" "}and any attendance records. Cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => setToDelete(null)}
+                disabled={busyId}
+                className="px-4 py-2 text-sm bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-zinc-300 disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={busyId}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-red-900/60 hover:bg-red-900 border border-red-900 rounded-lg text-red-100 disabled:opacity-40"
+              >
+                {busyId ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DeskLayout>
   );
 }

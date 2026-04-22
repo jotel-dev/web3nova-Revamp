@@ -10,10 +10,12 @@ import {
   User,
   Sparkles,
   Loader2,
+  Fingerprint,
 } from "lucide-react";
+import { startAuthentication, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import BackgroundEffects from "../Services/BackgroundEffects";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://<your-render-url>";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://intership-server.onrender.com";
 
 const formatTime = (iso) =>
   iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
@@ -69,14 +71,69 @@ export default function Attendance() {
     }
   }
 
+  async function getCheckinToken(cleanMatric) {
+    if (!browserSupportsWebAuthn()) {
+      throw new Error("This browser doesn't support passkeys. Use a phone or laptop with biometric unlock.");
+    }
+
+    const optsRes = await fetch(`${API}/passkey/auth/options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Matriculation_Number: cleanMatric }),
+    });
+    const opts = await optsRes.json().catch(() => ({}));
+    if (!optsRes.ok) {
+      throw new Error(opts.error || "Couldn't start passkey auth.");
+    }
+
+    let authResp;
+    try {
+      authResp = await startAuthentication({ optionsJSON: opts });
+    } catch (err) {
+      if (err?.name === "NotAllowedError") {
+        throw new Error("Passkey prompt was cancelled or timed out.");
+      }
+      throw new Error(err?.message || "Passkey auth failed.");
+    }
+
+    const verRes = await fetch(`${API}/passkey/auth/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Matriculation_Number: cleanMatric, response: authResp }),
+    });
+    const verData = await verRes.json().catch(() => ({}));
+    if (!verRes.ok || !verData.verified || !verData.token) {
+      throw new Error(verData.error || "Passkey verification failed.");
+    }
+    return verData.token;
+  }
+
   async function act(method, path, successFn) {
+    const cleanMatric = matric.trim();
     setLoading(true);
+    setMsg("");
+    setMsgType("info");
+    setMsg("Touch your fingerprint or use device unlock…");
+
+    let token;
+    try {
+      token = await getCheckinToken(cleanMatric);
+    } catch (err) {
+      setMsgType("error");
+      setMsg(err.message);
+      setLoading(false);
+      return;
+    }
+
     setMsg("");
     try {
       const r = await fetch(`${API}${path}`, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Matriculation_Number: matric.trim() }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ Matriculation_Number: cleanMatric }),
       });
       const data = await r.json();
       if (r.ok) {
@@ -300,7 +357,7 @@ function StatusPanel({ status, matric, loading, onCheckIn, onCheckOut, onReset }
       {status.state === "not_checked_in" && (
         <>
           <h2 className="text-3xl font-bold mb-2">Ready to check in</h2>
-          <p className="text-gray-400 mb-8">Tap the button below when you arrive at the hub.</p>
+          <p className="text-gray-400 mb-8">Use your passkey to confirm it's really you.</p>
           <motion.button
             onClick={onCheckIn}
             disabled={loading}
@@ -308,7 +365,7 @@ function StatusPanel({ status, matric, loading, onCheckIn, onCheckOut, onReset }
             whileTap={{ scale: loading ? 1 : 0.98 }}
             className="w-full px-8 py-5 bg-gradient-to-r from-green-600 to-emerald-400 text-white rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all flex items-center justify-center gap-3 disabled:opacity-60"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogIn className="w-5 h-5" />}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Fingerprint className="w-5 h-5" />}
             Check In
           </motion.button>
         </>
@@ -328,7 +385,7 @@ function StatusPanel({ status, matric, loading, onCheckIn, onCheckOut, onReset }
             whileTap={{ scale: loading ? 1 : 0.98 }}
             className="w-full px-8 py-5 bg-gradient-to-r from-red-600 to-orange-400 text-white rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all flex items-center justify-center gap-3 disabled:opacity-60"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogOut className="w-5 h-5" />}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Fingerprint className="w-5 h-5" />}
             Check Out
           </motion.button>
         </>
