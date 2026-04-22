@@ -51,16 +51,39 @@ const InternshipPage = () => {
     visible: { opacity: 1, y: 0 },
   };
 
+  // Admitted Interns State
+  const [interns, setInterns] = useState([]);
+  const [loadingInterns, setLoadingInterns] = useState(true);
+  const [internsError, setInternsError] = useState("");
+
+  useEffect(() => {
+    async function fetchInterns() {
+      setLoadingInterns(true);
+      setInternsError("");
+      try {
+        const res = await fetch("https://intership-server.onrender.com/interns");
+        if (!res.ok) throw new Error("Failed to fetch interns");
+        const data = await res.json();
+        setInterns(data);
+      } catch (err) {
+        setInternsError("Could not load admitted interns.");
+      } finally {
+        setLoadingInterns(false);
+      }
+    }
+    fetchInterns();
+  }, []);
+
   return (
     <div
       className="relative min-h-screen text-white overflow-hidden pb-20 pt-32 md:pt-40"
       style={{ fontFamily: "'Space Grotesk', sans-serif" }}
     >
       <BackgroundEffects />
-      
+
       {/* 🌌 Cosmic Background */}
       <div className="absolute inset-0 -z-10 bg-[#000000]" />
-      
+
       {/* Interactive Gradient Overlay */}
       <motion.div
         className="absolute inset-0 -z-10 opacity-30 pointer-events-none"
@@ -88,11 +111,11 @@ const InternshipPage = () => {
           </motion.div>
           
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold mb-6 tracking-tighter">
-            <span className="bg-gradient-to-b from-blue-400 via-blue-600 to-blue-800 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(37,99,235,0.3)]">
+            <span className="bg-linear-to-b from-blue-400 via-blue-600 to-blue-800 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(37,99,235,0.3)]">
               SIWES
             </span>
             <br />
-            <span className="bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-white to-gray-500 bg-clip-text text-transparent">
               Application
             </span>
           </h1>
@@ -114,7 +137,7 @@ const InternshipPage = () => {
             className="mt-8"
           >
             <button 
-              className="px-12 py-5 bg-gradient-to-r from-[#2E7BD1] to-[#92B4E4] text-white rounded-2xl font-bold text-xl hover:shadow-[0_0_40px_rgba(46,123,209,0.5)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 mx-auto"
+              className="px-12 py-5 bg-linear-to-r from-[#2E7BD1] to-[#92B4E4] text-white rounded-2xl font-bold text-xl hover:shadow-[0_0_40px_rgba(46,123,209,0.5)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 mx-auto"
               style={{
                 boxShadow: "0 10px 30px rgba(46, 123, 209, 0.3)",
               }}
@@ -124,6 +147,75 @@ const InternshipPage = () => {
             </button>
           </motion.div>
         </motion.div>
+
+
+        {/* Admitted Interns Section - Horizontal Scroll, No Title/Skill, Goal Label */}
+        <section className="relative z-10 py-20 overflow-x-hidden">
+          {loadingInterns ? (
+            <div className="flex justify-center items-center py-12">
+              <span className="text-blue-400 text-lg animate-pulse">Loading interns…</span>
+            </div>
+          ) : internsError ? (
+            <div className="flex justify-center items-center py-12">
+              <span className="text-red-400 text-lg">{internsError}</span>
+            </div>
+          ) : interns.length === 0 ? (
+            <div className="flex justify-center items-center py-12">
+              <span className="text-gray-400 text-lg">No admitted interns yet.</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-8 py-4 animate-scroll-interns whitespace-nowrap">
+                {interns.map((intern, idx) => (
+                  <motion.div
+                    key={intern.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: idx * 0.05 }}
+                    className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center hover:scale-105 transition-transform duration-300 min-w-[280px] max-w-xs mx-2"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  >
+                    <div className="absolute top-6 left-6 opacity-10">
+                      <CheckCircle2 className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="w-20 h-20 rounded-full overflow-hidden mb-4 border-4 border-blue-500/30 bg-blue-900/10 flex items-center justify-center shadow-lg">
+                      <img
+                        src={intern.photo_url || "/default-avatar.png"}
+                        alt={intern.full_name}
+                        className="object-cover w-full h-full"
+                        style={{ minHeight: "80px", minWidth: "80px" }}
+                        loading="lazy"
+                      />
+                    </div>
+                    <h3 className="text-lg md:text-xl font-bold mb-1 text-blue-400 truncate">{intern.full_name}</h3>
+                    <div className="text-sm text-gray-400 mb-1">{intern.Department}</div>
+                    <div className="mt-1 text-xs text-blue-500/70 mb-2">Cohort {intern.cohort_year}</div>
+                    <div className="w-full text-left text-gray-300 text-base italic mb-2 whitespace-normal break-words">
+                      <span className="font-semibold text-white">Goal:</span> {intern.expectations}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              <style jsx>{`
+                @keyframes scroll-interns {
+                  0% { transform: translateX(0); }
+                  100% { transform: translateX(-33.333%); }
+                }
+                .animate-scroll-interns {
+                  animation: scroll-interns 60s linear infinite;
+                  width: fit-content;
+                  display: flex;
+                }
+                .animate-scroll-interns:hover {
+                  animation-play-state: paused;
+                }
+                .scrollbar-hide::-webkit-scrollbar { display: none; }
+                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+              `}</style>
+            </div>
+          )}
+        </section>
 
         {/* Content Grid */}
         <motion.div 
@@ -138,7 +230,7 @@ const InternshipPage = () => {
             variants={itemVariants}
             className="group relative h-full"
           >
-            <div className="absolute -inset-0.5 bg-gradient-to-b from-blue-600 to-blue-900 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
+            <div className="absolute -inset-0.5 bg-linear-to-b from-blue-600 to-blue-900 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
             <div className="relative h-full bg-[#0a0a1a] border border-white/10 p-8 md:p-12 rounded-3xl overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-5">
                 <GraduationCap className="w-32 h-32" />
@@ -172,7 +264,7 @@ const InternshipPage = () => {
             variants={itemVariants}
             className="group relative h-full"
           >
-            <div className="absolute -inset-0.5 bg-gradient-to-b from-yellow-600 to-yellow-900 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
+            <div className="absolute -inset-0.5 bg-linear-to-b from-yellow-600 to-yellow-900 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
             <div className="relative h-full bg-[#0a0a1a] border border-white/10 p-8 md:p-12 rounded-3xl overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-5">
                 <CheckCircle2 className="w-32 h-32" />
@@ -193,7 +285,7 @@ const InternshipPage = () => {
                     className="flex items-start gap-4 text-lg text-gray-300"
                     whileHover={{ scale: 1.02 }}
                   >
-                    <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                    <div className="mt-1 shrink-0 w-6 h-6 rounded-full bg-yellow-500/10 flex items-center justify-center">
                       <div className="w-2 h-2 rounded-full bg-yellow-400" />
                     </div>
                     {gain}
@@ -219,7 +311,7 @@ const InternshipPage = () => {
                Monthly stipend available. <span className="text-blue-400 font-bold">T&C applies</span>
             </h3>
 
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent my-8"></div>
+            <div className="h-px w-full bg-linear-to-r from-transparent via-white/20 to-transparent my-8"></div>
 
             <div className="grid md:grid-cols-3 gap-8 w-full">
               <div className="flex flex-col items-center gap-4">
@@ -254,7 +346,7 @@ const InternshipPage = () => {
             </div>
 
             <motion.button 
-              className="mt-12 px-10 py-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] transition-all flex items-center gap-2 group"
+              className="mt-12 px-10 py-4 bg-linear-to-r from-blue-600 to-blue-400 text-white rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] transition-all flex items-center gap-2 group"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => router.push('/internship/apply')}
@@ -264,10 +356,6 @@ const InternshipPage = () => {
           </div>
         </motion.div>
       </div>
-
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
-      `}</style>
     </div>
   );
 };
