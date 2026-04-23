@@ -196,7 +196,7 @@ const InternshipPage = () => {
                       />
                     </div>
                     <h3 className="text-lg md:text-xl font-bold mb-1 text-blue-400 truncate">{intern.full_name}</h3>
-                    <div className="text-sm text-gray-400 mb-1">{intern.Department}</div>
+                    <div className="text-sm text-gray-400 mb-1 break-words whitespace-normal max-w-[180px]" style={{wordBreak: 'break-word'}}>{intern.Department}</div>
                     <div className="mt-1 text-xs text-blue-500/70 mb-2">Cohort {intern.cohort_year}</div>
                     <div className="w-full text-left text-gray-300 text-base italic mb-2 whitespace-normal break-words">
                       <span className="font-semibold text-white">Goal:</span> {intern.expectations}
