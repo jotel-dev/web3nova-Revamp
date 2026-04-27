@@ -151,6 +151,13 @@ const InternshipPage = () => {
 
         {/* Admitted Interns Section - Horizontal Scroll, No Title/Skill, Goal Label */}
         <section className="relative z-10 py-20 overflow-x-hidden">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm mb-2">
+              <CheckCircle2 className="w-4 h-4 text-[#2B6EFF]" />
+              <span className="text-sm text-gray-300 font-['Inter'] uppercase tracking-widest">Admitted Interns</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-white font-['Space_Grotesk']">Meet the Admitted Interns</h2>
+          </div>
           {loadingInterns ? (
             <div className="flex justify-center items-center py-12">
               <span className="text-blue-400 text-lg animate-pulse">Loading interns…</span>
@@ -166,13 +173,13 @@ const InternshipPage = () => {
           ) : (
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex gap-8 py-4 animate-scroll-interns whitespace-nowrap">
-                {interns.map((intern, idx) => (
+                {[...interns, ...interns].map((intern, idx) => (
                   <motion.div
-                    key={intern.id}
+                    key={intern.id + '-' + idx}
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.05 }}
+                    transition={{ duration: 0.5, delay: (idx % interns.length) * 0.05 }}
                     className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center hover:scale-105 transition-transform duration-300 min-w-[280px] max-w-xs mx-2"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
@@ -189,7 +196,7 @@ const InternshipPage = () => {
                       />
                     </div>
                     <h3 className="text-lg md:text-xl font-bold mb-1 text-blue-400 truncate">{intern.full_name}</h3>
-                    <div className="text-sm text-gray-400 mb-1">{intern.Department}</div>
+                    <div className="text-sm text-gray-400 mb-1 break-words whitespace-normal max-w-[180px]" style={{wordBreak: 'break-word'}}>{intern.Department}</div>
                     <div className="mt-1 text-xs text-blue-500/70 mb-2">Cohort {intern.cohort_year}</div>
                     <div className="w-full text-left text-gray-300 text-base italic mb-2 whitespace-normal break-words">
                       <span className="font-semibold text-white">Goal:</span> {intern.expectations}
