@@ -44,23 +44,23 @@ export default function ApplicantModal({ matric, onClose }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4"
         >
           <motion.div
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-auto"
+            className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-auto"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-900 sticky top-0 bg-zinc-950">
-              <h2 className="font-semibold">Applicant Details</h2>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-zinc-900 sticky top-0 bg-zinc-950">
+              <h2 className="font-semibold text-sm sm:text-base">Applicant Details</h2>
               <button onClick={onClose} className="text-zinc-400 hover:text-white">
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {error && (
                 <div className="text-sm text-red-400 bg-red-950/30 border border-red-900/50 rounded-lg px-3 py-2">
                   {error}
@@ -75,7 +75,7 @@ export default function ApplicantModal({ matric, onClose }) {
 
               {data && (
                 <div className="space-y-5">
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="w-20 h-20 rounded-full bg-zinc-900 overflow-hidden flex items-center justify-center shrink-0">
                       {data.photo_url ? (
                         <img src={data.photo_url} alt="" className="w-full h-full object-cover" />
@@ -83,9 +83,9 @@ export default function ApplicantModal({ matric, onClose }) {
                         <User size={32} className="text-zinc-600" />
                       )}
                     </div>
-                    <div>
-                      <div className="text-lg font-semibold">{data.full_name}</div>
-                      <div className="text-xs font-mono text-zinc-500">{data.Matriculation_Number}</div>
+                    <div className="flex-1">
+                      <div className="text-base sm:text-lg font-semibold">{data.full_name}</div>
+                      <div className="text-xs font-mono text-zinc-500 truncate">{data.Matriculation_Number}</div>
                       <div className="mt-1">
                         {data.status === "admitted" ? (
                           <span className="text-green-400 text-xs bg-green-950/40 px-2 py-0.5 rounded">admitted</span>
@@ -98,7 +98,7 @@ export default function ApplicantModal({ matric, onClose }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
                     <Field icon={Mail} label="Email" value={data.email} />
                     <Field icon={Phone} label="Phone" value={data.phone_number} />
                     <Field icon={Users} label="Parent contact" value={data.Parent_contact} />
@@ -116,23 +116,23 @@ export default function ApplicantModal({ matric, onClose }) {
                       <Fingerprint size={12} /> Passkey
                     </div>
                     {!confirmReset ? (
-                      <div className="flex items-center justify-between gap-3 bg-zinc-900/50 border border-zinc-900 rounded-lg px-3 py-3">
-                        <p className="text-sm text-zinc-400">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-900/50 border border-zinc-900 rounded-lg px-3 py-3">
+                        <p className="text-xs sm:text-sm text-zinc-400">
                           Reset this intern's passkey so they can re-register a new device at <span className="font-mono text-zinc-300">/recovery</span>.
                         </p>
                         <button
                           onClick={() => setConfirmReset(true)}
-                          className="shrink-0 inline-flex items-center gap-1 bg-amber-900/40 hover:bg-amber-900/70 border border-amber-900 text-amber-200 px-3 py-1.5 rounded text-xs"
+                          className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1 bg-amber-900/40 hover:bg-amber-900/70 border border-amber-900 text-amber-200 px-3 py-1.5 rounded text-xs"
                         >
                           <ShieldAlert size={12} /> Reset passkey
                         </button>
                       </div>
                     ) : (
                       <div className="bg-amber-950/30 border border-amber-900/50 rounded-lg p-3">
-                        <p className="text-sm text-amber-200 mb-3">
+                        <p className="text-xs sm:text-sm text-amber-200 mb-3">
                           Clear passkey for <span className="font-medium">{data.full_name}</span>? They'll have to set up a new one via /recovery.
                         </p>
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                           <button
                             onClick={() => setConfirmReset(false)}
                             disabled={resetting}

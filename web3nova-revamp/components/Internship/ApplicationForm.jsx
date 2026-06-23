@@ -25,7 +25,7 @@ const ApplicationForm = () => {
   const [photo, setPhoto] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
-  const [step, setStep] = useState(1); // 1 = form, 2 = passkey
+  const [step, setStep] = useState(1); // 1 = form, 2 = passkey (enforced)
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -246,46 +246,7 @@ const ApplicationForm = () => {
               )}
             </AnimatePresence>
 
-            {step === 2 ? (
-              <div className="space-y-6">
-                <div className="flex flex-col items-center text-center py-4">
-                  <div className="w-20 h-20 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
-                    <Fingerprint className="w-10 h-10 text-blue-400" />
-                  </div>
-                  <h2 className="text-2xl font-bold mb-3">Application received</h2>
-                  <p className="text-gray-400 max-w-md mb-8">
-                    Now create a passkey on this device. You'll use it (fingerprint,
-                    Face ID, or device unlock) to check in and out at the hub.
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-5 space-y-3 text-sm text-gray-300">
-                  <div className="flex items-start gap-3">
-                    <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                    <p>Your passkey stays on this device. We never see your fingerprint or face data.</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                    <p>Lost your device later? An admin can reset it and you can register a new one.</p>
-                  </div>
-                </div>
-
-                <motion.button
-                  type="button"
-                  onClick={handleCreatePasskey}
-                  disabled={passkeyLoading}
-                  whileHover={{ scale: passkeyLoading ? 1 : 1.02 }}
-                  whileTap={{ scale: passkeyLoading ? 1 : 0.98 }}
-                  className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-                >
-                  {passkeyLoading ? (
-                    <><Loader2 className="w-5 h-5 animate-spin" /> Waiting for device...</>
-                  ) : (
-                    <><Fingerprint className="w-5 h-5" /> Create Passkey</>
-                  )}
-                </motion.button>
-              </div>
-            ) : (
+            {step === 1 ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
@@ -474,6 +435,46 @@ const ApplicationForm = () => {
                 )}
               </motion.button>
             </form>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex flex-col items-center text-center py-4">
+                  <div className="w-20 h-20 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
+                    <Fingerprint className="w-10 h-10 text-blue-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">Final Step: Secure Your Access</h2>
+                  <p className="text-amber-400/80 text-sm font-semibold mb-2">⚠️ This is mandatory to complete your registration</p>
+                  <p className="text-gray-400 max-w-md mb-8">
+                    Create a passkey on this device. You'll use it (fingerprint,
+                    Face ID, or device unlock) to check in and out at the hub.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/30 p-5 space-y-3 text-sm text-gray-300">
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                    <p>Your passkey stays on this device. We never see your fingerprint or face data.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                    <p>Lost your device later? An admin can reset it and you can register a new one.</p>
+                  </div>
+                </div>
+
+                <motion.button
+                  type="button"
+                  onClick={handleCreatePasskey}
+                  disabled={passkeyLoading}
+                  whileHover={{ scale: passkeyLoading ? 1 : 1.02 }}
+                  whileTap={{ scale: passkeyLoading ? 1 : 0.98 }}
+                  className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {passkeyLoading ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" /> Waiting for device...</>
+                  ) : (
+                    <><Fingerprint className="w-5 h-5" /> Create Passkey & Complete Registration</>
+                  )}
+                </motion.button>
+              </div>
             )}
           </div>
         </motion.div>
