@@ -70,6 +70,7 @@ export default function Navigation() {
     { name: "Services", href: "/services" },
     { name: "Internship", href: "/internship" },
     { name: "Events", href: "/events" },
+    { name: "Hackathons", href: "/opportunities" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/#bookacall" },
   ];
