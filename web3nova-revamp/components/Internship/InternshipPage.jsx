@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, GraduationCap, MapPin, Phone, Twitter, Sparkles, Send } from "lucide-react";
+import { CheckCircle2, GraduationCap, MapPin, Phone, X, Sparkles, Send } from "lucide-react";
 import BackgroundEffects from "../Services/BackgroundEffects";
 import { useRouter } from "next/router";
 
@@ -343,7 +343,7 @@ const InternshipPage = () => {
 
               <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-gray-500/10 flex items-center justify-center text-gray-400">
-                  <Twitter className="w-6 h-6" />
+                <X className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm uppercase tracking-widest mb-1">Connect with us</p>

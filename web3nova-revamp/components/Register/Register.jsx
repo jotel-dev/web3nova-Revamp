@@ -4,8 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Palette, Sparkles, ChevronDown, ChevronUp,
-  Check, ArrowRight, ArrowLeft, User, Mail, Phone, MapPin, Github, Wallet, Star,
-  Brain, Globe, Cpu
+  Check, ArrowRight, ArrowLeft, User, Mail, Phone, MapPin, GitBranch, Wallet, Star, Brain, Globe, Cpu
 } from "lucide-react";
 
 // ✅ Base URL of your Render API
@@ -510,7 +509,7 @@ function Step2({ onNext, onBack, formData, setFormData }) {
           {/* GitHub */}
           <div>
             <label className="block text-sm font-semibold mb-2 text-gray-300 flex items-center gap-2">
-              <Github className="w-4 h-4" /> GitHub Profile (Optional)
+              <GitBranch className="w-4 h-4" /> GitHub Profile (Optional)
             </label>
             <input
               name="github"
